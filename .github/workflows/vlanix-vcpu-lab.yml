@@ -68,3 +68,5 @@ jobs:
           fi
       - name: Evidence parser tests (no Qwen data required)
         run: python3 scripts/vcpu-lab-evidence.py --test
+      - name: CLI output parity canonicalization tests
+        run: python3 scripts/vcpu-p31-cli-parity.py --test
