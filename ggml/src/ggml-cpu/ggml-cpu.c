@@ -7,6 +7,9 @@
 #include "ggml-cpu-impl.h"
 #include "ggml-impl.h"
 #include "quants.h"
+#if defined(GGML_VCPU_LAB)
+#include "vcpu-lab-q4q8.h"
+#endif
 #include "ggml-threading.h"
 #include "unary-ops.h"
 #include "binary-ops.h"
@@ -1250,7 +1253,33 @@ static void ggml_compute_forward_mul_mat_one_chunk(
                 //}
 
                 for (int64_t ir0 = iir0; ir0 < iir0 + blck_0 && ir0 < ir0_end; ir0 += num_rows_per_vec_dot) {
-                    vec_dot(ne00, &tmp[ir0 - iir0], (num_rows_per_vec_dot > 1 ? 16 : 0), src0_row + ir0 * nb01, (num_rows_per_vec_dot > 1 ? nb01 : 0), src1_col, (num_rows_per_vec_dot > 1 ? src1_col_stride : 0), num_rows_per_vec_dot);
+#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
+                    // A lab-only opt-in inside the real CPU MUL_MAT graph path.
+                    // No new worker pool, buffer copies or backend registration.
+                    // The original vec_dot is always the fallback.
+                    const char * vcpu_lab_env = getenv("GGML_VCPU_LAB_ENABLE");
+                    const bool vcpu_lab_enabled = vcpu_lab_env != NULL && strcmp(vcpu_lab_env, "1") == 0;
+                    const bool vcpu_lab_eligible =
+                        vcpu_lab_enabled &&
+                        type == GGML_TYPE_Q4_0 && vec_dot_type == GGML_TYPE_Q8_0 &&
+                        num_rows_per_vec_dot == 1 && ne00 % 32 == 0 && ne01 >= 128 &&
+                        ne11 == 1 && ne12 == 1 && ne13 == 1 &&
+                        src1->type == GGML_TYPE_F32 && !params->use_ref;
+                    if (vcpu_lab_eligible) {
+                        const char * trace = getenv("GGML_VCPU_LAB_TRACE");
+                        if (trace && strcmp(trace, "1") == 0) {
+                            static int trace_once = 0;
+                            if (__sync_bool_compare_and_swap(&trace_once,0,1)) {
+                                fprintf(stderr,"VLANIX_VCPU_LAB_HOOK_HIT op=MUL_MAT type=Q4_0 activation=Q8_0 cols=%" PRId64 "\n",ne00);
+                            }
+                        }
+                        ggml_vcpu_lab_vec_dot_q4_0_q8_0(ne00,&tmp[ir0-iir0],0,
+                                                         src0_row+ir0*nb01,0,src1_col,0,1);
+                    } else
+#endif
+                    {
+                        vec_dot(ne00, &tmp[ir0 - iir0], (num_rows_per_vec_dot > 1 ? 16 : 0), src0_row + ir0 * nb01, (num_rows_per_vec_dot > 1 ? nb01 : 0), src1_col, (num_rows_per_vec_dot > 1 ? src1_col_stride : 0), num_rows_per_vec_dot);
+                    }
                 }
 
                 for (int cn = 0; cn < num_rows_per_vec_dot; ++cn) {

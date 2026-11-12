@@ -1,3 +1,6 @@
+# Opt-in lab-only VCPU CPU dot hook; OFF in all normal llama.cpp builds.
+option(GGML_VCPU_LAB "Enable experimental VLANIX Q4xQ8 SSE2 CPU op hook" OFF)
+
 function(ggml_add_cpu_backend_features cpu_name arch)
     # The feature detection code is compiled as a separate target so that
     # it can be built without the architecture flags
@@ -25,6 +28,11 @@ function(ggml_add_cpu_backend_variant_impl tag_name)
     endif()
 
     ggml_add_backend_library(${GGML_CPU_NAME})
+    if (GGML_VCPU_LAB)
+        target_compile_definitions(${GGML_CPU_NAME} PRIVATE GGML_VCPU_LAB=1)
+        message(STATUS "VLANIX VCPU LAB hook compiled into ${GGML_CPU_NAME} (runtime OFF by default)")
+    endif()
+
 
     list (APPEND GGML_CPU_SOURCES
         ggml-cpu/ggml-cpu.c
