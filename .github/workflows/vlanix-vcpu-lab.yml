@@ -1,0 +1,70 @@
+name: VLANIX VCPU CPU hook lab
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'ggml/src/ggml-cpu/ggml-cpu.c'
+      - 'ggml/src/ggml-cpu/vcpu-lab-q4q8.h'
+      - 'ggml/src/ggml-cpu/CMakeLists.txt'
+      - 'tests/test-vcpu-lab-mul-mat.cpp'
+      - 'scripts/vcpu-lab-evidence.py'
+      - '.github/workflows/vlanix-vcpu-lab.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  ggml-sse2-parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure and compile isolated SSE2 GGML CPU opt-in
+        run: |
+          set -euo pipefail
+          cmake -S . -B build-vcpu-lab \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DGGML_VCPU_LAB=ON \
+            -DGGML_NATIVE=OFF -DGGML_AVX=OFF -DGGML_AVX2=OFF \
+            -DGGML_SSE42=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF -DGGML_BMI2=OFF \
+            -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF \
+            -DGGML_CCACHE=OFF
+          cmake --build build-vcpu-lab --target ggml-cpu -j 2
+      - name: Verify opt-in real GGML graph hook and native fallback
+        run: |
+          set -euo pipefail
+          g++ -O2 -std=c++17 -msse2 -pthread \
+            -I ggml/include tests/test-vcpu-lab-mul-mat.cpp \
+            -o build-vcpu-lab/test-vcpu-lab-mul-mat \
+            -L build-vcpu-lab/bin -lggml-cpu -lggml-base \
+            -Wl,-rpath,"$PWD/build-vcpu-lab/bin"
+          GGML_VCPU_LAB_TRACE=1 build-vcpu-lab/test-vcpu-lab-mul-mat \
+            2>&1 | tee /tmp/vcpu-lab-enabled.log
+          grep -q 'VLANIX_VCPU_LAB_HOOK_HIT' /tmp/vcpu-lab-enabled.log
+          grep -q 'P30_GRAPH_TESTS_PASS 6/6' /tmp/vcpu-lab-enabled.log
+      - name: Configure and verify build-time OFF path
+        run: |
+          set -euo pipefail
+          cmake -S . -B build-vcpu-off \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DGGML_VCPU_LAB=OFF \
+            -DGGML_NATIVE=OFF -DGGML_AVX=OFF -DGGML_AVX2=OFF \
+            -DGGML_SSE42=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF -DGGML_BMI2=OFF \
+            -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF \
+            -DGGML_CCACHE=OFF
+          cmake --build build-vcpu-off --target ggml-cpu -j 2
+          g++ -O2 -std=c++17 -msse2 -pthread \
+            -I ggml/include tests/test-vcpu-lab-mul-mat.cpp \
+            -o build-vcpu-off/test-vcpu-lab-mul-mat \
+            -L build-vcpu-off/bin -lggml-cpu -lggml-base \
+            -Wl,-rpath,"$PWD/build-vcpu-off/bin"
+          GGML_VCPU_LAB_ENABLE=1 GGML_VCPU_LAB_TRACE=1 \
+            build-vcpu-off/test-vcpu-lab-mul-mat 2>&1 | tee /tmp/vcpu-lab-disabled.log
+          grep -q 'P30_GRAPH_TESTS_PASS 6/6' /tmp/vcpu-lab-disabled.log
+          if grep -q 'VLANIX_VCPU_LAB_HOOK_HIT' /tmp/vcpu-lab-disabled.log; then
+            echo "ERROR: VCPU hook leaked into the default OFF build"
+            exit 1
+          fi
+      - name: Evidence parser tests (no Qwen data required)
+        run: python3 scripts/vcpu-lab-evidence.py --test
