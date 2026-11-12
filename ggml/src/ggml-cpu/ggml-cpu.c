@@ -1262,7 +1262,7 @@ static void ggml_compute_forward_mul_mat_one_chunk(
                     const bool vcpu_lab_eligible =
                         vcpu_lab_enabled &&
                         type == GGML_TYPE_Q4_0 && vec_dot_type == GGML_TYPE_Q8_0 &&
-                        num_rows_per_vec_dot == 1 && ne00 % 32 == 0 &&
+                        num_rows_per_vec_dot == 1 && ne00 % 32 == 0 && ne01 >= 128 &&
                         ne11 == 1 && ne12 == 1 && ne13 == 1 &&
                         src1->type == GGML_TYPE_F32 && !params->use_ref;
                     if (vcpu_lab_eligible) {
