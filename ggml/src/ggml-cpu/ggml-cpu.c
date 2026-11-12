@@ -1270,7 +1270,7 @@ static void ggml_compute_forward_mul_mat_one_chunk(
                         if (trace && strcmp(trace, "1") == 0) {
                             static int trace_once = 0;
                             if (__sync_bool_compare_and_swap(&trace_once,0,1)) {
-                                fprintf(stderr,"VLANIX_VCPU_LAB_HOOK_HIT op=MUL_MAT type=Q4_0 activation=Q8_0 cols=%" PRId64 "\\n",ne00);
+                                fprintf(stderr,"VLANIX_VCPU_LAB_HOOK_HIT op=MUL_MAT type=Q4_0 activation=Q8_0 cols=%" PRId64 "\n",ne00);
                             }
                         }
                         ggml_vcpu_lab_vec_dot_q4_0_q8_0(ne00,&tmp[ir0-iir0],0,
