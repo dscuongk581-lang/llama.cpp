@@ -1,0 +1,61 @@
+{
+  "build_isa": "x86_64_baseline_SSE2_no_AVX2",
+  "native_default": true,
+  "no_end_to_end_token_speedup_claim": true,
+  "num_observations": 96,
+  "per_tensor": [
+    {
+      "all_median_native_over_hook": 1.6692,
+      "cols": 1024,
+      "full_hook_median_ms": 11.264,
+      "full_native_median_ms": 18.889,
+      "holdout_hook_wins": 4,
+      "holdout_paired_median": 1.794,
+      "rows": 512,
+      "tensor": "attn_k",
+      "train_bootstrap_lower": 1.4953,
+      "train_paired_median": 1.656
+    },
+    {
+      "all_median_native_over_hook": 1.9416,
+      "cols": 2048,
+      "full_hook_median_ms": 28.703,
+      "full_native_median_ms": 55.663,
+      "holdout_hook_wins": 4,
+      "holdout_paired_median": 1.872,
+      "rows": 1024,
+      "tensor": "ssm_out",
+      "train_bootstrap_lower": 1.5658,
+      "train_paired_median": 1.9416
+    },
+    {
+      "all_median_native_over_hook": 1.8444,
+      "cols": 1024,
+      "full_hook_median_ms": 50.218,
+      "full_native_median_ms": 88.11,
+      "holdout_hook_wins": 4,
+      "holdout_paired_median": 1.8373,
+      "rows": 3584,
+      "tensor": "ffn_gate",
+      "train_bootstrap_lower": 1.7224,
+      "train_paired_median": 1.8444
+    },
+    {
+      "all_median_native_over_hook": 2.0364,
+      "cols": 3584,
+      "full_hook_median_ms": 45.225,
+      "full_native_median_ms": 96.295,
+      "holdout_hook_wins": 4,
+      "holdout_paired_median": 1.9924,
+      "rows": 1024,
+      "tensor": "ffn_down",
+      "train_bootstrap_lower": 1.9517,
+      "train_paired_median": 2.1647
+    }
+  ],
+  "real_qwen_activations": false,
+  "real_qwen_q4_weights": true,
+  "repeats": 12,
+  "source_commit": "8ca5a8008b57aa39f2601546c0d07912045080a5",
+  "status": "standalone_real_GGML_graph_operator_not_full_llama_decode"
+}
