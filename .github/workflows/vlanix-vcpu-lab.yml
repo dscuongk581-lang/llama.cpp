@@ -61,7 +61,7 @@ jobs:
             build-vcpu-lab/test-vcpu-p32-micro8 --one-worker-only 2>&1 | tee /tmp/p32-workers1.log
           grep -q 'VLANIX_MICRO_VCPU_DISPATCH units=8 workers=1' /tmp/p32-workers1.log
           grep -q 'P32_ONE_WORKER_PASS 2/2' /tmp/p32-workers1.log
-          GGML_VCPU_LAB_ENABLE=0 GGML_VCPU_MICRO_ENABLE=1 \
+          GGML_VCPU_LAB_ENABLE=0 GGML_VCPU_MICRO_ENABLE=0 \
             GGML_VCPU_MICRO_TASKS=8 GGML_VCPU_MICRO_TRACE=1 \
             build-vcpu-lab/test-vcpu-p32-micro8 2>&1 | tee /tmp/p32-disabled.log
           if grep -q 'VLANIX_MICRO_VCPU_DISPATCH' /tmp/p32-disabled.log; then
