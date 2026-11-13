@@ -57,8 +57,14 @@ static void compute_case(int rows, int cols, int vectors, int threads) {
     ggml_free(ctx);
 }
 
-int main() {
+int main(int argc, char **argv) {
     try {
+        if (argc == 2 && std::strcmp(argv[1], "--one-worker-only") == 0) {
+            compute_case(512, 1024, 1, 1);
+            compute_case(3584, 1024, 1, 1);
+            std::puts("P32_ONE_WORKER_PASS 2/2");
+            return 0;
+        }
         // Single-token decode candidates: hook may be active when compiled/enabled.
         compute_case(512, 1024, 1, 2);
         compute_case(1024, 2048, 1, 2);
