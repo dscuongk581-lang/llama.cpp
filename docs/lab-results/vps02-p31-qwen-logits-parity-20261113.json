@@ -1,0 +1,23 @@
+{
+  "experiment": "P3.1 real Qwen3.5-0.8B Q4_0 llama_decode greedy logits parity",
+  "lab": "VPS02 isolated llama.cpp fork build; no production changes",
+  "fork_source_commit": "99c5d300d13e18cd01f2cf24a115e2eb0687e633",
+  "parity_binary_sha256": "cef1bc06099f56949185f8619822a864f198884ae6484e596ba224b58f7a602a",
+  "graph_hook_trace_observed": true,
+  "model_weights": "existing local GGUF only; weights not committed",
+  "prompt": "synthetic even-number sequence",
+  "comparisons": {
+    "contexts": 2,
+    "context_execution": "sequential same model instance",
+    "cpu_threads": 2,
+    "generated_token_steps": 16,
+    "vocabulary_size": 248320,
+    "greedy_token_ids_match": true,
+    "max_abs_logit_difference_printed": 0,
+    "mean_abs_logit_difference_printed": 0,
+    "invalid_nonfinite_comparisons": 0,
+    "printed_precision_decimal_places": 9,
+    "status": "PASS"
+  },
+  "limitations": "Single prompt and 16 tokens; same model instance with two newly created contexts; comparison is not universal correctness, not a complete stochastic sampling test, no long-context verification. Values printed with 9 digits after decimal."
+}
