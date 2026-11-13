@@ -97,6 +97,7 @@ jobs:
             echo "Adaptive mode failed to fall back"; exit 1
           fi
           python3 -m py_compile scripts/vcpu-p33-adaptive-bench.py
+          python3 scripts/vcpu-p33-validate.py --test
       - name: Configure and verify build-time OFF path
         run: |
           set -euo pipefail
