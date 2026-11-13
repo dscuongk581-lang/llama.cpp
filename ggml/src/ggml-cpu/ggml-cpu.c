@@ -1534,8 +1534,14 @@ UseGgmlGemm2:;
         if (trace && strcmp(trace, "1") == 0) {
             static int trace_once = 0;
             if (__sync_bool_compare_and_swap(&trace_once, 0, 1)) {
-                fprintf(stderr, "VLANIX_MICRO_VCPU_DISPATCH mode=%s units=%d workers=%d cols=%" PRId64 " rows=%" PRId64 "\n",
-                        adaptive ? "adaptive" : "fixed8", micro_tasks, nth, ne00, ne01);
+                if (adaptive) {
+                    fprintf(stderr, "VLANIX_MICRO_VCPU_DISPATCH mode=adaptive units=%d workers=%d cols=%" PRId64 " rows=%" PRId64 "\n",
+                            micro_tasks, nth, ne00, ne01);
+                } else {
+                    // Preserve P3.2 log contract for existing validation/CI.
+                    fprintf(stderr, "VLANIX_MICRO_VCPU_DISPATCH units=8 workers=%d cols=%" PRId64 " rows=%" PRId64 "\n",
+                            nth, ne00, ne01);
+                }
             }
         }
 #endif
