@@ -73,6 +73,30 @@ jobs:
           python3 scripts/vcpu-p32-validate.py --test
           python3 -m py_compile scripts/vcpu-p32-qwen-sweep.py
           g++ -std=c++17 -fsyntax-only -I include -I ggml/include tests/test-vcpu-p32-logits.cpp
+      - name: P3.3 adaptive 1 2 4 8-task graph parity and fallback
+        run: |
+          set -euo pipefail
+          g++ -O2 -std=c++17 -msse2 -pthread \
+            -I ggml/include tests/test-vcpu-p33-adaptive.cpp \
+            -o build-vcpu-lab/test-vcpu-p33-adaptive \
+            -L build-vcpu-lab/bin -lggml-cpu -lggml-base \
+            -Wl,-rpath,"$PWD/build-vcpu-lab/bin"
+          for item in small:2:2 medium:4:2 large:8:2 one:1:1; do
+            IFS=: read -r case units workers <<< "$item"
+            GGML_VCPU_LAB_ENABLE=1 GGML_VCPU_MICRO_ENABLE=1 \
+              GGML_VCPU_MICRO_TASKS=adaptive GGML_VCPU_MICRO_TRACE=1 \
+              build-vcpu-lab/test-vcpu-p33-adaptive "$case" > "/tmp/p33-$case.log" 2>&1
+            grep -q "VLANIX_MICRO_VCPU_DISPATCH mode=adaptive units=$units workers=$workers" "/tmp/p33-$case.log"
+            grep -q 'P33_ADAPTIVE_GRAPH_PASS' "/tmp/p33-$case.log"
+          done
+          GGML_VCPU_LAB_ENABLE=1 GGML_VCPU_MICRO_ENABLE=1 \
+            GGML_VCPU_MICRO_TASKS=adaptive GGML_VCPU_MICRO_TRACE=1 \
+            build-vcpu-lab/test-vcpu-p33-adaptive fallback > /tmp/p33-fallback.log 2>&1
+          grep -q P33_ADAPTIVE_GRAPH_PASS /tmp/p33-fallback.log
+          if grep -q VLANIX_MICRO_VCPU_DISPATCH /tmp/p33-fallback.log; then
+            echo "Adaptive mode failed to fall back"; exit 1
+          fi
+          python3 -m py_compile scripts/vcpu-p33-adaptive-bench.py
       - name: Configure and verify build-time OFF path
         run: |
           set -euo pipefail
