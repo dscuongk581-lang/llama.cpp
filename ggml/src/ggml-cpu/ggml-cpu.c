@@ -1586,7 +1586,7 @@ UseGgmlGemm2:;
         if (trace && strcmp(trace,"1") == 0) {
             static int hybrid_trace_once = 0;
             if (__sync_bool_compare_and_swap(&hybrid_trace_once,0,1)) {
-                fprintf(stderr,"VLANIX_MICRO_VCPU_SCHED mode=hybrid units=%d workers=%d local=%d\\n",
+                fprintf(stderr,"VLANIX_MICRO_VCPU_SCHED mode=hybrid units=%d workers=%d local=%d\n",
                         nchunk0,nth,micro_local_claims);
             }
         }
