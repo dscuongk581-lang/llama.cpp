@@ -1553,6 +1553,12 @@ UseGgmlGemm2:;
     if (micro_stats) {
         vcpu_micro_stats_register();
         atomic_fetch_add_explicit(&vcpu_micro_worker_visits, 1, memory_order_relaxed);
+        if (ith == 0) {
+            if (nchunk0 == 1) atomic_fetch_add_explicit(&vcpu_micro_ops_1, 1, memory_order_relaxed);
+            else if (nchunk0 == 2) atomic_fetch_add_explicit(&vcpu_micro_ops_2, 1, memory_order_relaxed);
+            else if (nchunk0 == 4) atomic_fetch_add_explicit(&vcpu_micro_ops_4, 1, memory_order_relaxed);
+            else if (nchunk0 == 8) atomic_fetch_add_explicit(&vcpu_micro_ops_8, 1, memory_order_relaxed);
+        }
     }
 #endif
 
