@@ -1,0 +1,76 @@
+{
+  "status": "real_lab_llama_cli_text_parity_not_logit_parity",
+  "model": "Qwen3.5-0.8B-Q4_0",
+  "threads": 2,
+  "temperature": 0,
+  "predicted_tokens_limit": 32,
+  "cases": [
+    {
+      "case": "arithmetic",
+      "exact_generated_text_match": true,
+      "native": {
+        "case": "arithmetic",
+        "route": "native",
+        "seed": 20261113,
+        "predicted_tokens_limit": 32,
+        "text_chars": 178,
+        "generation_sha256": "6f7ae4ad6ac0dbf236674f946f97376ba6cb12380e4ec3104535805dc72d1b42",
+        "hook_hit": false
+      },
+      "hook": {
+        "case": "arithmetic",
+        "route": "vcpu-hook",
+        "seed": 20261113,
+        "predicted_tokens_limit": 32,
+        "text_chars": 178,
+        "generation_sha256": "6f7ae4ad6ac0dbf236674f946f97376ba6cb12380e4ec3104535805dc72d1b42",
+        "hook_hit": true
+      }
+    },
+    {
+      "case": "code",
+      "exact_generated_text_match": true,
+      "native": {
+        "case": "code",
+        "route": "native",
+        "seed": 20261114,
+        "predicted_tokens_limit": 32,
+        "text_chars": 163,
+        "generation_sha256": "a1535d8c0b5f24bcd6b09ad8aab24b488a2c4270286e7b780f7164260c9431f4",
+        "hook_hit": false
+      },
+      "hook": {
+        "case": "code",
+        "route": "vcpu-hook",
+        "seed": 20261114,
+        "predicted_tokens_limit": 32,
+        "text_chars": 163,
+        "generation_sha256": "a1535d8c0b5f24bcd6b09ad8aab24b488a2c4270286e7b780f7164260c9431f4",
+        "hook_hit": true
+      }
+    },
+    {
+      "case": "facts",
+      "exact_generated_text_match": true,
+      "native": {
+        "case": "facts",
+        "route": "native",
+        "seed": 20261115,
+        "predicted_tokens_limit": 32,
+        "text_chars": 133,
+        "generation_sha256": "e8ad2d317386a198d45caf21b6d6235f2ef3064af702a825645b1618276d4f03",
+        "hook_hit": false
+      },
+      "hook": {
+        "case": "facts",
+        "route": "vcpu-hook",
+        "seed": 20261115,
+        "predicted_tokens_limit": 32,
+        "text_chars": 133,
+        "generation_sha256": "e8ad2d317386a198d45caf21b6d6235f2ef3064af702a825645b1618276d4f03",
+        "hook_hit": true
+      }
+    }
+  ],
+  "all_exact_generated_text_match": true
+}
