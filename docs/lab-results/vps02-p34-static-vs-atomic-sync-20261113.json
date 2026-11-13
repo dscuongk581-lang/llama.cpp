@@ -1,0 +1,40 @@
+{
+  "status": "one_instrumented_session_per_mode_only",
+  "host": "VPS02 two QEMU vCPU SSE2",
+  "model": "Qwen3.5-0.8B Q4_0",
+  "generated_tokens": 8,
+  "bench_internal_repetitions": 1,
+  "modes": {
+    "static": {
+      "task_count": 7776,
+      "atomic_claims": 0,
+      "sum_atomic_claim_ns": 0,
+      "sum_worker_compute_ns": 2905248945,
+      "sum_worker_barrier_elapsed_ns": 18534275,
+      "worker_barrier_visits": 2700,
+      "mean_worker_barrier_elapsed_ns": 6864.55,
+      "task_mix": {
+        "1": 0,
+        "2": 108,
+        "4": 594,
+        "8": 648
+      }
+    },
+    "atomic": {
+      "task_count": 7776,
+      "atomic_claims": 7560,
+      "sum_atomic_claim_ns": 1468586,
+      "sum_worker_compute_ns": 2238654542,
+      "sum_worker_barrier_elapsed_ns": 7982795,
+      "worker_barrier_visits": 2700,
+      "mean_worker_barrier_elapsed_ns": 2956.59,
+      "task_mix": {
+        "1": 0,
+        "2": 108,
+        "4": 594,
+        "8": 648
+      }
+    }
+  },
+  "caution": "Worker CPU time summed across threads overlaps, bar_wait includes arrival skew, instruments distort timing; different sessions with noisy host. Interpret queue claims as facts, timing as diagnostic only."
+}
