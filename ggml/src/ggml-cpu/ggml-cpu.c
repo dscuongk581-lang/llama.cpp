@@ -1418,12 +1418,47 @@ UseGgmlGemm1:;
     #endif
     }
 
+    // VLANIX P3.2: eight LOGICAL row-shard tasks on GGML's existing 1/2 CPU workers.
+    // No new OS thread is spawned. The standard GGML atomic chunk allocator
+    // dispatches exactly 8 unique logical units; completion uses GGML's own graph barrier.
+    // Disabled unless BOTH P3 hook and P3.2 partitioner are explicitly opted in.
+#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
+    const char * vcpu_enabled = getenv("GGML_VCPU_LAB_ENABLE");
+    const char * micro_enabled = getenv("GGML_VCPU_MICRO_ENABLE");
+    const char * micro_units = getenv("GGML_VCPU_MICRO_TASKS");
+    const bool vcpu_micro8 =
+        vcpu_enabled && strcmp(vcpu_enabled, "1") == 0 &&
+        micro_enabled && strcmp(micro_enabled, "1") == 0 &&
+        micro_units && strcmp(micro_units, "8") == 0 &&
+        src0->type == GGML_TYPE_Q4_0 && vec_dot_type == GGML_TYPE_Q8_0 &&
+        src1->type == GGML_TYPE_F32 && ggml_is_contiguous(src0) &&
+        ggml_is_contiguous(src1) &&
+        ne00 % 32 == 0 && ne01 >= 128 &&
+        ne11 == 1 && ne12 == 1 && ne13 == 1 &&
+        !params->use_ref && (nth == 1 || nth == 2);
+#else
+    const bool vcpu_micro8 = false;
+#endif
+
     if (ith == 0) {
         // Every thread starts at ith, so the first unprocessed chunk is nth.  This save a bit of coordination right at the start.
         atomic_store_explicit(&params->threadpool->current_chunk, nth, memory_order_relaxed);
     }
 
+#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
+    const char * barrier_stats_flag = vcpu_micro8 ? getenv("GGML_VCPU_MICRO_STATS") : NULL;
+    const bool barrier_stats_enabled = barrier_stats_flag && strcmp(barrier_stats_flag, "1") == 0;
+    if (barrier_stats_enabled) vcpu_micro_stats_register();
+    const uint64_t barrier_start = barrier_stats_enabled ? vcpu_micro_monotonic_ns() : 0;
+#endif
     ggml_barrier(params->threadpool);
+#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
+    if (barrier_stats_enabled) {
+        atomic_fetch_add_explicit(&vcpu_micro_barrier_visits,1,memory_order_relaxed);
+        atomic_fetch_add_explicit(&vcpu_micro_barrier_ns,
+                vcpu_micro_monotonic_ns()-barrier_start,memory_order_relaxed);
+    }
+#endif
 
 #if GGML_USE_LLAMAFILE
     if (!params->use_ref && src1->type != vec_dot_type) {
@@ -1447,28 +1482,6 @@ UseGgmlGemm1:;
         return;
     }
 UseGgmlGemm2:;
-#endif
-
-    // VLANIX P3.2: eight LOGICAL row-shard tasks on GGML's existing 1/2 CPU workers.
-    // No new OS thread is spawned. The standard GGML atomic chunk allocator
-    // dispatches exactly 8 unique logical units; completion uses GGML's own graph barrier.
-    // Disabled unless BOTH P3 hook and P3.2 partitioner are explicitly opted in.
-#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
-    const char * vcpu_enabled = getenv("GGML_VCPU_LAB_ENABLE");
-    const char * micro_enabled = getenv("GGML_VCPU_MICRO_ENABLE");
-    const char * micro_units = getenv("GGML_VCPU_MICRO_TASKS");
-    const bool vcpu_micro8 =
-        vcpu_enabled && strcmp(vcpu_enabled, "1") == 0 &&
-        micro_enabled && strcmp(micro_enabled, "1") == 0 &&
-        micro_units && strcmp(micro_units, "8") == 0 &&
-        src0->type == GGML_TYPE_Q4_0 && vec_dot_type == GGML_TYPE_Q8_0 &&
-        src1->type == GGML_TYPE_F32 && ggml_is_contiguous(src0) &&
-        ggml_is_contiguous(src1) &&
-        ne00 % 32 == 0 && ne01 >= 128 &&
-        ne11 == 1 && ne12 == 1 && ne13 == 1 &&
-        !params->use_ref && (nth == 1 || nth == 2);
-#else
-    const bool vcpu_micro8 = false;
 #endif
 
     // This is the size of the first dimension of the result, so we can iterate that way. (see the ASSERT above, these are the same numbers)
