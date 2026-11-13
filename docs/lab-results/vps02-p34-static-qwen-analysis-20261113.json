@@ -1,0 +1,91 @@
+{
+  "deployment_decision": "NO_AUTOMATIC_PROMOTION",
+  "model": "Qwen3.5-0.8B Q4_0",
+  "modes": [
+    {
+      "maximum_tokens_per_sec": 4.0214,
+      "median_tokens_per_sec": 3.054,
+      "minimum_tokens_per_sec": 2.4651,
+      "mode": "native2"
+    },
+    {
+      "maximum_tokens_per_sec": 4.6586,
+      "median_tokens_per_sec": 4.4921,
+      "minimum_tokens_per_sec": 4.4244,
+      "mode": "hook2"
+    },
+    {
+      "maximum_tokens_per_sec": 4.4113,
+      "median_tokens_per_sec": 4.1731,
+      "minimum_tokens_per_sec": 3.8777,
+      "mode": "adaptive_atomic2"
+    },
+    {
+      "maximum_tokens_per_sec": 3.7962,
+      "median_tokens_per_sec": 3.7366,
+      "minimum_tokens_per_sec": 3.665,
+      "mode": "adaptive_static2"
+    },
+    {
+      "maximum_tokens_per_sec": 4.5113,
+      "median_tokens_per_sec": 4.1063,
+      "minimum_tokens_per_sec": 2.8985,
+      "mode": "fixed8_static2"
+    }
+  ],
+  "observations": 25,
+  "paired": [
+    {
+      "baseline": "native2",
+      "median_static_over_baseline": 1.2415,
+      "per_repeat": [
+        1.4164,
+        1.2415,
+        1.1474,
+        0.9292,
+        1.4867
+      ],
+      "static_faster_pairs": 4
+    },
+    {
+      "baseline": "hook2",
+      "median_static_over_baseline": 0.8277,
+      "per_repeat": [
+        0.8277,
+        0.844,
+        0.8243,
+        0.8446,
+        0.7867
+      ],
+      "static_faster_pairs": 0
+    },
+    {
+      "baseline": "adaptive_atomic2",
+      "median_static_over_baseline": 0.8833,
+      "per_repeat": [
+        0.979,
+        0.8833,
+        0.9384,
+        0.8471,
+        0.8782
+      ],
+      "static_faster_pairs": 0
+    },
+    {
+      "baseline": "fixed8_static2",
+      "median_static_over_baseline": 0.8925,
+      "per_repeat": [
+        0.8415,
+        0.8819,
+        1.2683,
+        0.9996,
+        0.8925
+      ],
+      "static_faster_pairs": 1
+    }
+  ],
+  "repetitions": 5,
+  "source": "VPS02 SSE2 QEMU shared 2 vCPU",
+  "status": "offline_lab_only",
+  "warning": "Small noisy sample. Actual logits checked separately. Single-host only."
+}

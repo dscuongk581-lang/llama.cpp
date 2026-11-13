@@ -98,6 +98,32 @@ jobs:
           fi
           python3 -m py_compile scripts/vcpu-p33-adaptive-bench.py
           python3 scripts/vcpu-p33-validate.py --test
+      - name: P3.4 static affinity eliminates atomic claims without changing outputs
+        run: |
+          set -euo pipefail
+          for item in small:2:2 medium:4:2 large:8:2 one:1:1; do
+            IFS=: read -r case units workers <<< "$item"
+            GGML_VCPU_LAB_ENABLE=1 GGML_VCPU_MICRO_ENABLE=1 \
+              GGML_VCPU_MICRO_TASKS=adaptive GGML_VCPU_MICRO_SCHED=static \
+              GGML_VCPU_MICRO_TRACE=1 \
+              build-vcpu-lab/test-vcpu-p33-adaptive "$case" > "/tmp/p34-$case.log" 2>&1
+            grep -q "VLANIX_MICRO_VCPU_SCHED mode=static units=$units workers=$workers" "/tmp/p34-$case.log"
+            grep -q 'P33_ADAPTIVE_GRAPH_PASS' "/tmp/p34-$case.log"
+          done
+          GGML_VCPU_LAB_ENABLE=1 GGML_VCPU_MICRO_ENABLE=1 \
+            GGML_VCPU_MICRO_TASKS=adaptive GGML_VCPU_MICRO_SCHED=static \
+            GGML_VCPU_MICRO_TRACE=1 \
+            build-vcpu-lab/test-vcpu-p33-adaptive fallback > /tmp/p34-fallback.log 2>&1
+          grep -q P33_ADAPTIVE_GRAPH_PASS /tmp/p34-fallback.log
+          if grep -q VLANIX_MICRO_VCPU_SCHED /tmp/p34-fallback.log; then exit 1; fi
+          GGML_VCPU_LAB_ENABLE=1 GGML_VCPU_MICRO_ENABLE=1 \
+            GGML_VCPU_MICRO_TASKS=adaptive GGML_VCPU_MICRO_SCHED=static \
+            GGML_VCPU_MICRO_STATS=1 \
+            build-vcpu-lab/test-vcpu-p33-adaptive large > /tmp/p34-no-queue.log 2>&1
+          grep -q 'VLANIX_MICRO_VCPU_STATS' /tmp/p34-no-queue.log
+          grep -Eq 'VLANIX_MICRO_VCPU_STATS .* claims=0 ' /tmp/p34-no-queue.log
+          python3 -m py_compile scripts/vcpu-p34-static-locality-bench.py
+          python3 scripts/vcpu-p34-validate.py --test
       - name: Configure and verify build-time OFF path
         run: |
           set -euo pipefail

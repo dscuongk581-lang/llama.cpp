@@ -1562,14 +1562,34 @@ UseGgmlGemm2:;
     }
 #endif
 
+    // P3.4 static owner assignment: every worker owns a contiguous group
+    // of row shards, which avoids the shared atomic task claim queue.
+    // Experimental, opt-in, only for the existing eligible Micro-VCPU mode.
+#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
+    const char * micro_sched_env = vcpu_micro8 ? getenv("GGML_VCPU_MICRO_SCHED") : NULL;
+    const bool micro_static = micro_sched_env && strcmp(micro_sched_env, "static") == 0;
+    if (micro_static) {
+        const char * trace = getenv("GGML_VCPU_MICRO_TRACE");
+        if (trace && strcmp(trace, "1") == 0) {
+            static int static_trace_once = 0;
+            if (__sync_bool_compare_and_swap(&static_trace_once,0,1)) {
+                fprintf(stderr, "VLANIX_MICRO_VCPU_SCHED mode=static units=%d workers=%d\n",nchunk0,nth);
+            }
+        }
+    }
+#else
+    const bool micro_static = false;
+#endif
+    const int micro_static_shards_per_worker = micro_static ? (nchunk0 + nth - 1) / nth : 0;
+
     // The number of elements in each chunk
     const int64_t dr0 = (nr0 + nchunk0 - 1) / nchunk0;
     const int64_t dr1 = (nr1 + nchunk1 - 1) / nchunk1;
 
     // The first chunk comes from our thread_id, the rest will get auto-assigned.
-    int current_chunk = ith;
+    int current_chunk = micro_static ? ith * micro_static_shards_per_worker : ith;
 
-    while (current_chunk < nchunk0 * nchunk1) {
+    while (current_chunk < nchunk0 * nchunk1 && (!micro_static || current_chunk < (ith + 1) * micro_static_shards_per_worker)) {
         const int64_t ith0 = current_chunk % nchunk0;
         const int64_t ith1 = current_chunk / nchunk0;
 
@@ -1599,6 +1619,11 @@ UseGgmlGemm2:;
         }
 #endif
 
+        if (micro_static) {
+            // Consecutive row shards stay with the same worker. No atomic queue.
+            ++current_chunk;
+            continue;
+        }
         if (nth >= nchunk0 * nchunk1) {
             break;
         }
