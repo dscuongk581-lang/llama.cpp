@@ -9,6 +9,7 @@
 #include "quants.h"
 #if defined(GGML_VCPU_LAB)
 #include "vcpu-lab-q4q8.h"
+#include "vcpu-lab-micro-stats.h"
 #endif
 #include "ggml-threading.h"
 #include "unary-ops.h"
@@ -1515,6 +1516,17 @@ UseGgmlGemm2:;
 #endif
     }
 
+#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
+    const char * statflag = vcpu_micro8 ? getenv("GGML_VCPU_MICRO_STATS") : NULL;
+    const bool micro_stats = statflag && strcmp(statflag,"1") == 0;
+    if (micro_stats) {
+        vcpu_micro_stats_register();
+        atomic_fetch_add_explicit(&vcpu_micro_worker_visits, 1, memory_order_relaxed);
+    }
+#else
+    const bool micro_stats = false;
+#endif
+
     // The number of elements in each chunk
     const int64_t dr0 = (nr0 + nchunk0 - 1) / nchunk0;
     const int64_t dr1 = (nr1 + nchunk1 - 1) / nchunk1;
@@ -1540,13 +1552,33 @@ UseGgmlGemm2:;
         if ((nr0 % 2 != 0) || (ne11 % 2 != 0) || ((ir0_end - ir0_start) % 2 != 0) || ((ir1_end - ir1_start) % 2 != 0)) {
             num_rows_per_vec_dot = 1;
         }
+#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
+        const uint64_t work_begin = micro_stats ? vcpu_micro_monotonic_ns() : 0;
+#endif
         ggml_compute_forward_mul_mat_one_chunk(params, dst, src0->type, num_rows_per_vec_dot, ir0_start, ir0_end, ir1_start, ir1_end);
+#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
+        if (micro_stats) {
+            atomic_fetch_add_explicit(&vcpu_micro_work_units,1,memory_order_relaxed);
+            atomic_fetch_add_explicit(&vcpu_micro_work_ns,
+                    vcpu_micro_monotonic_ns()-work_begin,memory_order_relaxed);
+        }
+#endif
 
         if (nth >= nchunk0 * nchunk1) {
             break;
         }
 
+#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
+        const uint64_t claim_begin = micro_stats ? vcpu_micro_monotonic_ns() : 0;
+#endif
         current_chunk = atomic_fetch_add_explicit(&params->threadpool->current_chunk, 1, memory_order_relaxed);
+#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
+        if (micro_stats) {
+            atomic_fetch_add_explicit(&vcpu_micro_atomic_claims,1,memory_order_relaxed);
+            atomic_fetch_add_explicit(&vcpu_micro_atomic_ns,
+                    vcpu_micro_monotonic_ns()-claim_begin,memory_order_relaxed);
+        }
+#endif
     }
 }
 
