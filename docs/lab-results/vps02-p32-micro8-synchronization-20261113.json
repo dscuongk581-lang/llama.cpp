@@ -1,0 +1,34 @@
+{
+  "status": "diagnostic_only_metrics_include_instrumentation",
+  "repeats": 1,
+  "generated_tokens": 8,
+  "note": "Barrier time includes worker arrival skew; sums are across worker threads and cannot be added to wall time. Do not use diagnostic runs as speed benchmark.",
+  "profiles": [
+    {
+      "worker": 1,
+      "logical_tasks": 8,
+      "operator_instances": 1350,
+      "measured_claim_attempts": 10800,
+      "claim_mean_ns": 53.75,
+      "barrier_elapsed_mean_ns": 46.28,
+      "sum_claim_ns": 580485,
+      "sum_barrier_ns": 62477,
+      "sum_worker_task_ns": 2230851061,
+      "claim_to_worker_task_time": 0.00026,
+      "barrier_to_worker_task_time": 0.000028
+    },
+    {
+      "worker": 2,
+      "logical_tasks": 8,
+      "operator_instances": 1350,
+      "measured_claim_attempts": 10800,
+      "claim_mean_ns": 308.66,
+      "barrier_elapsed_mean_ns": 5639.3,
+      "sum_claim_ns": 3333573,
+      "sum_barrier_ns": 15226107,
+      "sum_worker_task_ns": 2798845577,
+      "claim_to_worker_task_time": 0.001191,
+      "barrier_to_worker_task_time": 0.00544
+    }
+  ]
+}
