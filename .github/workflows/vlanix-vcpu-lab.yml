@@ -70,3 +70,8 @@ jobs:
         run: python3 scripts/vcpu-lab-evidence.py --test
       - name: CLI output parity canonicalization tests
         run: python3 scripts/vcpu-p31-cli-parity.py --test
+      - name: Compile check logits parity test (no model required)
+        run: |
+          set -euo pipefail
+          g++ -std=c++17 -fsyntax-only -I include -I ggml/include tests/test-vcpu-p31-logits.cpp
+
