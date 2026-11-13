@@ -1,0 +1,91 @@
+{
+  "host": "VPS02 2 QEMU vCPU SSE2",
+  "limits": "Only 5 repeats, one host, short 24-token decode, noisy shared VPS.",
+  "model": "Qwen3.5-0.8B Q4_0",
+  "modes": [
+    {
+      "max_tokens_per_sec": 4.1361,
+      "median_tokens_per_sec": 3.1203,
+      "min_tokens_per_sec": 2.7871,
+      "mode": "native2"
+    },
+    {
+      "max_tokens_per_sec": 4.7585,
+      "median_tokens_per_sec": 4.3386,
+      "min_tokens_per_sec": 4.2664,
+      "mode": "hook2"
+    },
+    {
+      "max_tokens_per_sec": 5.0521,
+      "median_tokens_per_sec": 4.3861,
+      "min_tokens_per_sec": 4.1544,
+      "mode": "adaptive_atomic2"
+    },
+    {
+      "max_tokens_per_sec": 4.2303,
+      "median_tokens_per_sec": 4.0222,
+      "min_tokens_per_sec": 3.9435,
+      "mode": "adaptive_static2"
+    },
+    {
+      "max_tokens_per_sec": 4.4587,
+      "median_tokens_per_sec": 4.0938,
+      "min_tokens_per_sec": 3.1875,
+      "mode": "adaptive_hybrid2"
+    }
+  ],
+  "observations": 25,
+  "paired": [
+    {
+      "baseline": "native2",
+      "median_hybrid_over_baseline": 1.3579,
+      "ratios": [
+        1.0021,
+        1.3579,
+        0.9841,
+        1.5998,
+        1.4685
+      ],
+      "wins": 4
+    },
+    {
+      "baseline": "hook2",
+      "median_hybrid_over_baseline": 0.9382,
+      "ratios": [
+        0.6698,
+        0.9246,
+        0.9382,
+        1.0428,
+        0.9595
+      ],
+      "wins": 1
+    },
+    {
+      "baseline": "adaptive_atomic2",
+      "median_hybrid_over_baseline": 0.9518,
+      "ratios": [
+        0.6927,
+        1.0199,
+        0.9518,
+        1.0166,
+        0.8103
+      ],
+      "wins": 2
+    },
+    {
+      "baseline": "adaptive_static2",
+      "median_hybrid_over_baseline": 0.9691,
+      "ratios": [
+        0.8083,
+        1.0534,
+        0.9691,
+        1.1138,
+        0.9677
+      ],
+      "wins": 2
+    }
+  ],
+  "paired_repetitions": 5,
+  "status": "research_only",
+  "verdict": "DO_NOT_AUTO_PROMOTE"
+}

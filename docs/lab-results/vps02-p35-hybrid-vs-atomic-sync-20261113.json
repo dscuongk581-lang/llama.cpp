@@ -1,0 +1,53 @@
+{
+  "status": "diagnostic_only_not_a_speed_benchmark",
+  "model": "Qwen3.5-0.8B Q4_0",
+  "host": "VPS02 QEMU 2 vCPU SSE2",
+  "tokens": 8,
+  "bench_repetitions": 1,
+  "modes": {
+    "adaptive_atomic": {
+      "actual_micro_tasks": 7776,
+      "atomic_queue_claims": 7560,
+      "sum_atomic_claim_ns": 1286745,
+      "sum_worker_compute_ns": 2843712786,
+      "sum_worker_barrier_elapsed_ns": 7448558,
+      "mean_barrier_elapsed_per_worker_visit_ns": 2758.73,
+      "task_shapes": {
+        "1": 0,
+        "2": 108,
+        "4": 594,
+        "8": 648
+      }
+    },
+    "locality_hybrid": {
+      "actual_micro_tasks": 7776,
+      "atomic_queue_claims": 5076,
+      "sum_atomic_claim_ns": 924621,
+      "sum_worker_compute_ns": 2853128157,
+      "sum_worker_barrier_elapsed_ns": 10604468,
+      "mean_barrier_elapsed_per_worker_visit_ns": 3927.58,
+      "task_shapes": {
+        "1": 0,
+        "2": 108,
+        "4": 594,
+        "8": 648
+      }
+    },
+    "adaptive_static": {
+      "actual_micro_tasks": 7776,
+      "atomic_queue_claims": 0,
+      "sum_atomic_claim_ns": 0,
+      "sum_worker_compute_ns": 2504765251,
+      "sum_worker_barrier_elapsed_ns": 8844649,
+      "mean_barrier_elapsed_per_worker_visit_ns": 3275.8,
+      "task_shapes": {
+        "1": 0,
+        "2": 108,
+        "4": 594,
+        "8": 648
+      }
+    }
+  },
+  "hybrid_queue_claim_reduction_percent": 32.86,
+  "notes": "Three sequential instrumented runs; elapsed barrier includes arrival skew, worker times overlap; host load varies. Cannot infer wall time or causality from counters."
+}

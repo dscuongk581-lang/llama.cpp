@@ -1,0 +1,28 @@
+{
+  "model": "Qwen3.5-0.8B-Q4_0",
+  "mode": "locality_first_hybrid",
+  "test": "one short synthetic prompt greedy llama_decode",
+  "cases": [
+    {
+      "workers": 1,
+      "token_ids_equal": true,
+      "generated_steps": 16,
+      "vocab_size": 248320,
+      "max_abs_logits_printed": "0.000000000",
+      "mean_abs_logits_printed": "0.000000000",
+      "invalid_comparisons": 0,
+      "status": "PASS"
+    },
+    {
+      "workers": 2,
+      "token_ids_equal": true,
+      "generated_steps": 16,
+      "vocab_size": 248320,
+      "max_abs_logits_printed": "0.000000000",
+      "mean_abs_logits_printed": "0.000000000",
+      "invalid_comparisons": 0,
+      "status": "PASS"
+    }
+  ],
+  "limitations": "16 tokens, two fresh contexts, nine decimal printed precision; no broad proof of full-model equivalence."
+}

@@ -1440,9 +1440,22 @@ UseGgmlGemm1:;
     const bool vcpu_micro8 = false;
 #endif
 
+    // P3.5 locality-first bounded claims: each GGML worker initially owns
+    // up to two ADJACENT shards; remaining shards use the existing shared
+    // atomic queue. These exclusive reserved ranges cannot be stolen until
+    // all local work is exhausted. No nested worker pool or new threads.
+#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
+    const char * p35_sched = vcpu_micro8 ? getenv("GGML_VCPU_MICRO_SCHED") : NULL;
+    const bool micro_hybrid = p35_sched && strcmp(p35_sched, "hybrid") == 0;
+    const int p35_tasks = nth == 1 ? 1 : ne01 < 1024 ? 2 : ne01 < 3072 ? 4 : 8;
+    const int micro_local_claims = micro_hybrid ? (nth == 1 ? 1 : MIN(2, p35_tasks / nth)) : 1;
+#else
+    const bool micro_hybrid = false;
+    const int micro_local_claims = 1;
+#endif
     if (ith == 0) {
-        // Every thread starts at ith, so the first unprocessed chunk is nth.  This save a bit of coordination right at the start.
-        atomic_store_explicit(&params->threadpool->current_chunk, nth, memory_order_relaxed);
+        // Reserve disjoint contiguous local ranges ahead of the shared queue.
+        atomic_store_explicit(&params->threadpool->current_chunk, nth * micro_local_claims, memory_order_relaxed);
     }
 
 #if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
@@ -1568,6 +1581,16 @@ UseGgmlGemm2:;
 #if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
     const char * micro_sched_env = vcpu_micro8 ? getenv("GGML_VCPU_MICRO_SCHED") : NULL;
     const bool micro_static = micro_sched_env && strcmp(micro_sched_env, "static") == 0;
+    if (micro_hybrid) {
+        const char * trace = getenv("GGML_VCPU_MICRO_TRACE");
+        if (trace && strcmp(trace,"1") == 0) {
+            static int hybrid_trace_once = 0;
+            if (__sync_bool_compare_and_swap(&hybrid_trace_once,0,1)) {
+                fprintf(stderr,"VLANIX_MICRO_VCPU_SCHED mode=hybrid units=%d workers=%d local=%d\n",
+                        nchunk0,nth,micro_local_claims);
+            }
+        }
+    }
     if (micro_static) {
         const char * trace = getenv("GGML_VCPU_MICRO_TRACE");
         if (trace && strcmp(trace, "1") == 0) {
@@ -1587,7 +1610,7 @@ UseGgmlGemm2:;
     const int64_t dr1 = (nr1 + nchunk1 - 1) / nchunk1;
 
     // The first chunk comes from our thread_id, the rest will get auto-assigned.
-    int current_chunk = micro_static ? ith * micro_static_shards_per_worker : ith;
+    int current_chunk = micro_static ? ith * micro_static_shards_per_worker : (micro_hybrid ? ith * micro_local_claims : ith);
 
     while (current_chunk < nchunk0 * nchunk1 && (!micro_static || current_chunk < (ith + 1) * micro_static_shards_per_worker)) {
         const int64_t ith0 = current_chunk % nchunk0;
@@ -1621,6 +1644,12 @@ UseGgmlGemm2:;
 
         if (micro_static) {
             // Consecutive row shards stay with the same worker. No atomic queue.
+            ++current_chunk;
+            continue;
+        }
+        if (micro_hybrid && current_chunk + 1 < (ith + 1) * micro_local_claims &&
+            current_chunk >= ith * micro_local_claims) {
+            // Local contiguous shard, no atomic queue traffic.
             ++current_chunk;
             continue;
         }

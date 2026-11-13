@@ -124,6 +124,26 @@ jobs:
           grep -Eq 'VLANIX_MICRO_VCPU_STATS .* claims=0 ' /tmp/p34-no-queue.log
           python3 -m py_compile scripts/vcpu-p34-static-locality-bench.py
           python3 scripts/vcpu-p34-validate.py --test
+      - name: P3.5 hybrid local-first and atomic fallback GGML graph parity
+        run: |
+          set -euo pipefail
+          for item in small:2:2:1 medium:4:2:2 large:8:2:2 one:1:1:1; do
+            IFS=: read -r shape units workers local <<< "$item"
+            GGML_VCPU_LAB_ENABLE=1 GGML_VCPU_MICRO_ENABLE=1 \
+              GGML_VCPU_MICRO_TASKS=adaptive GGML_VCPU_MICRO_SCHED=hybrid \
+              GGML_VCPU_MICRO_TRACE=1 \
+              build-vcpu-lab/test-vcpu-p33-adaptive "$shape" > "/tmp/p35-$shape.log" 2>&1
+            grep -q "VLANIX_MICRO_VCPU_SCHED mode=hybrid units=$units workers=$workers local=$local" "/tmp/p35-$shape.log"
+            grep -q P33_ADAPTIVE_GRAPH_PASS "/tmp/p35-$shape.log"
+          done
+          GGML_VCPU_LAB_ENABLE=1 GGML_VCPU_MICRO_ENABLE=1 \
+            GGML_VCPU_MICRO_TASKS=adaptive GGML_VCPU_MICRO_SCHED=hybrid \
+            GGML_VCPU_MICRO_TRACE=1 \
+            build-vcpu-lab/test-vcpu-p33-adaptive fallback > /tmp/p35-fallback.log 2>&1
+          grep -q P33_ADAPTIVE_GRAPH_PASS /tmp/p35-fallback.log
+          if grep -q VLANIX_MICRO_VCPU_SCHED /tmp/p35-fallback.log; then exit 1; fi
+          python3 -m py_compile scripts/vcpu-p35-hybrid-bench.py
+          python3 scripts/vcpu-p35-validate.py --test
       - name: Configure and verify build-time OFF path
         run: |
           set -euo pipefail
