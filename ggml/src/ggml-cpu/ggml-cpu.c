@@ -1448,6 +1448,28 @@ UseGgmlGemm1:;
 UseGgmlGemm2:;
 #endif
 
+    // VLANIX P3.2: eight LOGICAL row-shard tasks on GGML's existing 1/2 CPU workers.
+    // No new OS thread is spawned. The standard GGML atomic chunk allocator
+    // dispatches exactly 8 unique logical units; completion uses GGML's own graph barrier.
+    // Disabled unless BOTH P3 hook and P3.2 partitioner are explicitly opted in.
+#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
+    const char * vcpu_enabled = getenv("GGML_VCPU_LAB_ENABLE");
+    const char * micro_enabled = getenv("GGML_VCPU_MICRO_ENABLE");
+    const char * micro_units = getenv("GGML_VCPU_MICRO_TASKS");
+    const bool vcpu_micro8 =
+        vcpu_enabled && strcmp(vcpu_enabled, "1") == 0 &&
+        micro_enabled && strcmp(micro_enabled, "1") == 0 &&
+        micro_units && strcmp(micro_units, "8") == 0 &&
+        src0->type == GGML_TYPE_Q4_0 && vec_dot_type == GGML_TYPE_Q8_0 &&
+        src1->type == GGML_TYPE_F32 && ggml_is_contiguous(src0) &&
+        ggml_is_contiguous(src1) &&
+        ne00 % 32 == 0 && ne01 >= 128 &&
+        ne11 == 1 && ne12 == 1 && ne13 == 1 &&
+        !params->use_ref && (nth == 1 || nth == 2);
+#else
+    const bool vcpu_micro8 = false;
+#endif
+
     // This is the size of the first dimension of the result, so we can iterate that way. (see the ASSERT above, these are the same numbers)
     const int64_t nr0 = ne0;
 
@@ -1475,6 +1497,22 @@ UseGgmlGemm2:;
         // distribute the thread work across the inner or outer loop based on which one is larger
         nchunk0 = nr0 > nr1 ? nth : 1; // parallelize by src0 rows
         nchunk1 = nr0 > nr1 ? 1 : nth; // parallelize by src1 rows
+    }
+
+    if (vcpu_micro8) {
+        // Exactly 8 logical Micro-VCPUs. GGML threadpool remains the 1/2
+        // physical executors; no nested pool, no extra synchronization layer.
+        nchunk0 = 8;
+        nchunk1 = 1;
+#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
+        const char * trace = getenv("GGML_VCPU_MICRO_TRACE");
+        if (trace && strcmp(trace, "1") == 0) {
+            static int trace_once = 0;
+            if (__sync_bool_compare_and_swap(&trace_once, 0, 1)) {
+                fprintf(stderr, "VLANIX_MICRO_VCPU_DISPATCH units=8 workers=%d cols=%" PRId64 " rows=%" PRId64 "\n", nth, ne00, ne01);
+            }
+        }
+#endif
     }
 
     // The number of elements in each chunk
