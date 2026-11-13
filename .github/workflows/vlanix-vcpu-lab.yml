@@ -116,6 +116,12 @@ jobs:
             build-vcpu-lab/test-vcpu-p33-adaptive fallback > /tmp/p34-fallback.log 2>&1
           grep -q P33_ADAPTIVE_GRAPH_PASS /tmp/p34-fallback.log
           if grep -q VLANIX_MICRO_VCPU_SCHED /tmp/p34-fallback.log; then exit 1; fi
+          GGML_VCPU_LAB_ENABLE=1 GGML_VCPU_MICRO_ENABLE=1 \
+            GGML_VCPU_MICRO_TASKS=adaptive GGML_VCPU_MICRO_SCHED=static \
+            GGML_VCPU_MICRO_STATS=1 \
+            build-vcpu-lab/test-vcpu-p33-adaptive large > /tmp/p34-no-queue.log 2>&1
+          grep -q 'VLANIX_MICRO_VCPU_STATS' /tmp/p34-no-queue.log
+          grep -Eq 'VLANIX_MICRO_VCPU_STATS .* claims=0 ' /tmp/p34-no-queue.log
           python3 -m py_compile scripts/vcpu-p34-static-locality-bench.py
           python3 scripts/vcpu-p34-validate.py --test
       - name: Configure and verify build-time OFF path
