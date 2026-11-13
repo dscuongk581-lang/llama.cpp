@@ -1,0 +1,28 @@
+{
+  "model": "Qwen3.5-0.8B Q4_0",
+  "mode": "adaptive_static",
+  "result": "PASS",
+  "tests": [
+    {
+      "workers": 1,
+      "greedy_token_ids_match": true,
+      "steps": 16,
+      "vocab": 248320,
+      "logit_max_abs_printed": "0.000000000",
+      "logit_mean_abs_printed": "0.000000000",
+      "invalid_comparisons": 0,
+      "status": "PASS"
+    },
+    {
+      "workers": 2,
+      "greedy_token_ids_match": true,
+      "steps": 16,
+      "vocab": 248320,
+      "logit_max_abs_printed": "0.000000000",
+      "logit_mean_abs_printed": "0.000000000",
+      "invalid_comparisons": 0,
+      "status": "PASS"
+    }
+  ],
+  "limitations": "Only one synthetic short prompt, 16 greedy tokens, printed precision nine decimals. Not universal functional parity."
+}
