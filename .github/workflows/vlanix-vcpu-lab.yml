@@ -43,6 +43,36 @@ jobs:
             2>&1 | tee /tmp/vcpu-lab-enabled.log
           grep -q 'VLANIX_VCPU_LAB_HOOK_HIT' /tmp/vcpu-lab-enabled.log
           grep -q 'P30_GRAPH_TESTS_PASS 6/6' /tmp/vcpu-lab-enabled.log
+      - name: Verify P3.2 eight logical tasks on one and two existing workers
+        run: |
+          set -euo pipefail
+          g++ -O2 -std=c++17 -msse2 -pthread \
+            -I ggml/include tests/test-vcpu-p32-micro8.cpp \
+            -o build-vcpu-lab/test-vcpu-p32-micro8 \
+            -L build-vcpu-lab/bin -lggml-cpu -lggml-base \
+            -Wl,-rpath,"$PWD/build-vcpu-lab/bin"
+          GGML_VCPU_LAB_ENABLE=1 GGML_VCPU_MICRO_ENABLE=1 \
+            GGML_VCPU_MICRO_TASKS=8 GGML_VCPU_MICRO_TRACE=1 \
+            build-vcpu-lab/test-vcpu-p32-micro8 2>&1 | tee /tmp/p32-workers2.log
+          grep -q 'VLANIX_MICRO_VCPU_DISPATCH units=8 workers=2' /tmp/p32-workers2.log
+          grep -q 'P32_GRAPH_TESTS_PASS 8/8' /tmp/p32-workers2.log
+          GGML_VCPU_LAB_ENABLE=1 GGML_VCPU_MICRO_ENABLE=1 \
+            GGML_VCPU_MICRO_TASKS=8 GGML_VCPU_MICRO_TRACE=1 \
+            build-vcpu-lab/test-vcpu-p32-micro8 --one-worker-only 2>&1 | tee /tmp/p32-workers1.log
+          grep -q 'VLANIX_MICRO_VCPU_DISPATCH units=8 workers=1' /tmp/p32-workers1.log
+          grep -q 'P32_ONE_WORKER_PASS 2/2' /tmp/p32-workers1.log
+          GGML_VCPU_LAB_ENABLE=0 GGML_VCPU_MICRO_ENABLE=0 \
+            GGML_VCPU_MICRO_TASKS=8 GGML_VCPU_MICRO_TRACE=1 \
+            build-vcpu-lab/test-vcpu-p32-micro8 2>&1 | tee /tmp/p32-disabled.log
+          if grep -q 'VLANIX_MICRO_VCPU_DISPATCH' /tmp/p32-disabled.log; then
+            echo 'FAIL: Micro-VCPU dispatched without opt-in'; exit 1
+          fi
+      - name: P3.2 evidence validator and direct Qwen logits source
+        run: |
+          set -euo pipefail
+          python3 scripts/vcpu-p32-validate.py --test
+          python3 -m py_compile scripts/vcpu-p32-qwen-sweep.py
+          g++ -std=c++17 -fsyntax-only -I include -I ggml/include tests/test-vcpu-p32-logits.cpp
       - name: Configure and verify build-time OFF path
         run: |
           set -euo pipefail

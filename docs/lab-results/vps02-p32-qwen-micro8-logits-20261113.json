@@ -1,0 +1,37 @@
+{
+  "test": "P3.2 real Qwen3.5-0.8B Q4_0 greedy token and logits parity",
+  "host": "VPS02 2 vCPU QEMU SSE2",
+  "model_data": "read only local GGUF (not committed)",
+  "logical_micro_vcpu": 8,
+  "code_path": "GGML_OP_MUL_MAT native CPU graph with opt-in 8 logical row tasks",
+  "conditions": [
+    "GGML_VCPU_LAB_ENABLE=1",
+    "GGML_VCPU_MICRO_ENABLE=1",
+    "GGML_VCPU_MICRO_TASKS=8"
+  ],
+  "results": [
+    {
+      "workers": 1,
+      "generated_tokens": 16,
+      "vocab": 248320,
+      "token_ids_match": true,
+      "max_abs_logit_diff_printed": "0.000000000",
+      "mean_abs_logit_diff_printed": "0.000000000",
+      "invalid_comparisons": 0,
+      "dispatch_trace": true,
+      "status": "PASS"
+    },
+    {
+      "workers": 2,
+      "generated_tokens": 16,
+      "vocab": 248320,
+      "token_ids_match": true,
+      "max_abs_logit_diff_printed": "0.000000000",
+      "mean_abs_logit_diff_printed": "0.000000000",
+      "invalid_comparisons": 0,
+      "dispatch_trace": true,
+      "status": "PASS"
+    }
+  ],
+  "limitations": "One short synthetic arithmetic prompt and greedy decoding; printed logits precision nine decimals; no long-context or stochastic sampling proof; no model/prompt bytes committed."
+}
