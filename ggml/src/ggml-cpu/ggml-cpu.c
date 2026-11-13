@@ -1573,7 +1573,7 @@ UseGgmlGemm2:;
         if (trace && strcmp(trace, "1") == 0) {
             static int static_trace_once = 0;
             if (__sync_bool_compare_and_swap(&static_trace_once,0,1)) {
-                fprintf(stderr, "VLANIX_MICRO_VCPU_SCHED mode=static units=%d workers=%d\\n",nchunk0,nth);
+                fprintf(stderr, "VLANIX_MICRO_VCPU_SCHED mode=static units=%d workers=%d\n",nchunk0,nth);
             }
         }
     }
