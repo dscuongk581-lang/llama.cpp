@@ -1,0 +1,89 @@
+{
+  "limitations": "No cross-device speedup; shared VPS load, small N, no long-prompt parity measured here.",
+  "logical_microvcpu_count": 8,
+  "micro8_worker2_vs_hook2_no_micro": {
+    "median_paired_ratio": 0.9407,
+    "micro8_faster_pairs": 1,
+    "per_pair_ratio": [
+      0.9407,
+      0.7761,
+      1.08,
+      0.97,
+      0.8898
+    ]
+  },
+  "native_relative_paired": {
+    "hook2_no_micro": {
+      "median_paired_speedup_vs_native2": 1.3105,
+      "per_pair_speedup": [
+        1.2232,
+        2.039,
+        1.0807,
+        1.3105,
+        1.4166
+      ],
+      "wins_out_of_5": 5
+    },
+    "micro8_worker1": {
+      "median_paired_speedup_vs_native2": 0.8864,
+      "per_pair_speedup": [
+        0.8864,
+        1.149,
+        0.9489,
+        0.8474,
+        0.8737
+      ],
+      "wins_out_of_5": 1
+    },
+    "micro8_worker2": {
+      "median_paired_speedup_vs_native2": 1.2605,
+      "per_pair_speedup": [
+        1.1507,
+        1.5825,
+        1.1671,
+        1.2713,
+        1.2605
+      ],
+      "wins_out_of_5": 5
+    }
+  },
+  "observations": 20,
+  "profiles": [
+    {
+      "maximum_tokens_per_sec": 3.8739,
+      "median_tokens_per_sec": 3.2419,
+      "micro_tasks": 0,
+      "minimum_tokens_per_sec": 2.6334,
+      "mode": "native2",
+      "workers": 2
+    },
+    {
+      "maximum_tokens_per_sec": 3.6758,
+      "median_tokens_per_sec": 3.0258,
+      "micro_tasks": 8,
+      "minimum_tokens_per_sec": 2.6069,
+      "mode": "micro8_worker1",
+      "workers": 1
+    },
+    {
+      "maximum_tokens_per_sec": 4.5213,
+      "median_tokens_per_sec": 4.1352,
+      "micro_tasks": 8,
+      "minimum_tokens_per_sec": 3.7612,
+      "mode": "micro8_worker2",
+      "workers": 2
+    },
+    {
+      "maximum_tokens_per_sec": 5.3695,
+      "median_tokens_per_sec": 4.2486,
+      "micro_tasks": 0,
+      "minimum_tokens_per_sec": 4.1864,
+      "mode": "hook2_no_micro",
+      "workers": 2
+    }
+  ],
+  "qwen_model": "Qwen3.5-0.8B Q4_0",
+  "repeats": 5,
+  "source": "VPS02 QEMU 2 virtual CPU, SSE2-only fork-built llama-bench",
+  "status": "experimental_single_vps_decode_not_distributed"
+}
