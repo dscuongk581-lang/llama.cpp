@@ -15,6 +15,10 @@ static _Atomic uint64_t vcpu_micro_atomic_ns = 0;
 static _Atomic uint64_t vcpu_micro_worker_visits = 0;
 static _Atomic uint64_t vcpu_micro_barrier_ns = 0;
 static _Atomic uint64_t vcpu_micro_barrier_visits = 0;
+static _Atomic uint64_t vcpu_micro_ops_1 = 0;
+static _Atomic uint64_t vcpu_micro_ops_2 = 0;
+static _Atomic uint64_t vcpu_micro_ops_4 = 0;
+static _Atomic uint64_t vcpu_micro_ops_8 = 0;
 static int vcpu_micro_stats_initialized = 0;
 
 static inline uint64_t vcpu_micro_monotonic_ns(void) {
@@ -31,12 +35,18 @@ static void vcpu_micro_stats_print(void) {
     const uint64_t visits = atomic_load(&vcpu_micro_worker_visits);
     const uint64_t barrier = atomic_load(&vcpu_micro_barrier_ns);
     const uint64_t barrier_visits = atomic_load(&vcpu_micro_barrier_visits);
+    const uint64_t ops1 = atomic_load(&vcpu_micro_ops_1);
+    const uint64_t ops2 = atomic_load(&vcpu_micro_ops_2);
+    const uint64_t ops4 = atomic_load(&vcpu_micro_ops_4);
+    const uint64_t ops8 = atomic_load(&vcpu_micro_ops_8);
     fprintf(stderr,
-            "VLANIX_MICRO_VCPU_STATS units=%llu claims=%llu claim_ns=%llu work_ns=%llu worker_visits=%llu barrier_ns=%llu barrier_visits=%llu note=diagnostic_instrumented_barrier_includes_arrival_skew\n",
+            "VLANIX_MICRO_VCPU_STATS units=%llu claims=%llu claim_ns=%llu work_ns=%llu worker_visits=%llu barrier_ns=%llu barrier_visits=%llu ops1=%llu ops2=%llu ops4=%llu ops8=%llu note=diagnostic_instrumented_barrier_includes_arrival_skew\n",
             (unsigned long long)units, (unsigned long long)claims,
             (unsigned long long)atomic_time, (unsigned long long)work,
             (unsigned long long)visits,
-            (unsigned long long)barrier, (unsigned long long)barrier_visits);
+            (unsigned long long)barrier, (unsigned long long)barrier_visits,
+            (unsigned long long)ops1, (unsigned long long)ops2,
+            (unsigned long long)ops4, (unsigned long long)ops8);
 }
 
 static inline void vcpu_micro_stats_register(void) {

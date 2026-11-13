@@ -1429,7 +1429,7 @@ UseGgmlGemm1:;
     const bool vcpu_micro8 =
         vcpu_enabled && strcmp(vcpu_enabled, "1") == 0 &&
         micro_enabled && strcmp(micro_enabled, "1") == 0 &&
-        micro_units && strcmp(micro_units, "8") == 0 &&
+        micro_units && (strcmp(micro_units, "8") == 0 || strcmp(micro_units, "adaptive") == 0) &&
         src0->type == GGML_TYPE_Q4_0 && vec_dot_type == GGML_TYPE_Q8_0 &&
         src1->type == GGML_TYPE_F32 && ggml_is_contiguous(src0) &&
         ggml_is_contiguous(src1) &&
@@ -1514,16 +1514,34 @@ UseGgmlGemm2:;
     }
 
     if (vcpu_micro8) {
-        // Exactly 8 logical Micro-VCPUs. GGML threadpool remains the 1/2
-        // physical executors; no nested pool, no extra synchronization layer.
-        nchunk0 = 8;
+        // P3.3: predeclared row-count heuristic, not a trained runtime autotuner.
+        // Fixed '8' mode is retained for apples-to-apples P3.2 comparisons.
+        // Both variants reuse the existing GGML CPU workers + atomic queue.
+        int micro_tasks = 8;
+#if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
+        const bool adaptive = strcmp(micro_units, "adaptive") == 0;
+        if (adaptive) {
+            // On a single worker, avoid queue traffic entirely.
+            // On two workers, use coarse static row shards for small operators;
+            // use more logical units only for larger row dimensions.
+            micro_tasks = nth == 1 ? 1 : ne01 < 1024 ? 2 : ne01 < 3072 ? 4 : 8;
+        }
+#endif
+        nchunk0 = micro_tasks;
         nchunk1 = 1;
 #if defined(GGML_VCPU_LAB) && defined(__SSE2__) && (defined(__x86_64__) || defined(__i386__))
         const char * trace = getenv("GGML_VCPU_MICRO_TRACE");
         if (trace && strcmp(trace, "1") == 0) {
             static int trace_once = 0;
             if (__sync_bool_compare_and_swap(&trace_once, 0, 1)) {
-                fprintf(stderr, "VLANIX_MICRO_VCPU_DISPATCH units=8 workers=%d cols=%" PRId64 " rows=%" PRId64 "\n", nth, ne00, ne01);
+                if (adaptive) {
+                    fprintf(stderr, "VLANIX_MICRO_VCPU_DISPATCH mode=adaptive units=%d workers=%d cols=%" PRId64 " rows=%" PRId64 "\n",
+                            micro_tasks, nth, ne00, ne01);
+                } else {
+                    // Preserve P3.2 log contract for existing validation/CI.
+                    fprintf(stderr, "VLANIX_MICRO_VCPU_DISPATCH units=8 workers=%d cols=%" PRId64 " rows=%" PRId64 "\n",
+                            nth, ne00, ne01);
+                }
             }
         }
 #endif
@@ -1535,6 +1553,12 @@ UseGgmlGemm2:;
     if (micro_stats) {
         vcpu_micro_stats_register();
         atomic_fetch_add_explicit(&vcpu_micro_worker_visits, 1, memory_order_relaxed);
+        if (ith == 0) {
+            if (nchunk0 == 1) atomic_fetch_add_explicit(&vcpu_micro_ops_1, 1, memory_order_relaxed);
+            else if (nchunk0 == 2) atomic_fetch_add_explicit(&vcpu_micro_ops_2, 1, memory_order_relaxed);
+            else if (nchunk0 == 4) atomic_fetch_add_explicit(&vcpu_micro_ops_4, 1, memory_order_relaxed);
+            else if (nchunk0 == 8) atomic_fetch_add_explicit(&vcpu_micro_ops_8, 1, memory_order_relaxed);
+        }
     }
 #endif
 

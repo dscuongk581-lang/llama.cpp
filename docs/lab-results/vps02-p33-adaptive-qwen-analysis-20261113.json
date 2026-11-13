@@ -1,0 +1,86 @@
+{
+  "adaptive2_paired_vs": {
+    "fixed8_2": {
+      "adaptive2_wins": 3,
+      "median_adaptive2_speed_ratio": 1.0556,
+      "ratios": [
+        1.2659,
+        0.9453,
+        1.0556,
+        0.9896,
+        1.1679
+      ]
+    },
+    "hook2": {
+      "adaptive2_wins": 2,
+      "median_adaptive2_speed_ratio": 0.9699,
+      "ratios": [
+        0.9699,
+        1.043,
+        1.1699,
+        0.8984,
+        0.9317
+      ]
+    },
+    "native2": {
+      "adaptive2_wins": 5,
+      "median_adaptive2_speed_ratio": 1.4029,
+      "ratios": [
+        1.4785,
+        1.2174,
+        1.4281,
+        1.1058,
+        1.4029
+      ]
+    }
+  },
+  "caveat": "Only 5 pairs, host noise; no inter-node distribution.",
+  "cpu": "VPS02 2 QEMU vCPU SSE2",
+  "decision": "NOT_AUTO_PROMOTED",
+  "observations": 25,
+  "profiles": [
+    {
+      "logical_tasks": "0",
+      "maximum_tokens_per_sec": 3.6649,
+      "median_tokens_per_sec": 3.3495,
+      "minimum_tokens_per_sec": 2.9653,
+      "mode": "native2",
+      "workers": 2
+    },
+    {
+      "logical_tasks": "0",
+      "maximum_tokens_per_sec": 4.6802,
+      "median_tokens_per_sec": 4.4649,
+      "minimum_tokens_per_sec": 4.0889,
+      "mode": "hook2",
+      "workers": 2
+    },
+    {
+      "logical_tasks": "8",
+      "maximum_tokens_per_sec": 4.6949,
+      "median_tokens_per_sec": 4.0952,
+      "minimum_tokens_per_sec": 3.5618,
+      "mode": "fixed8_2",
+      "workers": 2
+    },
+    {
+      "logical_tasks": "adaptive",
+      "maximum_tokens_per_sec": 4.7835,
+      "median_tokens_per_sec": 4.4379,
+      "minimum_tokens_per_sec": 4.0527,
+      "mode": "adaptive2",
+      "workers": 2
+    },
+    {
+      "logical_tasks": "adaptive",
+      "maximum_tokens_per_sec": 3.0559,
+      "median_tokens_per_sec": 2.9786,
+      "minimum_tokens_per_sec": 2.4183,
+      "mode": "adaptive1",
+      "workers": 1
+    }
+  ],
+  "qwen": "Qwen3.5-0.8B Q4_0",
+  "randomized_repeats": 5,
+  "status": "lab_only"
+}

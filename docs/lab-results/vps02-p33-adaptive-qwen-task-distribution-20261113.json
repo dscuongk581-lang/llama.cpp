@@ -1,0 +1,21 @@
+{
+  "status": "single_instrumented_Qwen_run_not_unbiased_performance",
+  "mode": "adaptive",
+  "threads": 2,
+  "generated_tokens": 8,
+  "operator_count": 1350,
+  "logical_tasks_actual": 7776,
+  "task_distribution": {
+    "1": 0,
+    "2": 108,
+    "4": 594,
+    "8": 648
+  },
+  "atomic_claims": 7560,
+  "atomic_claim_total_ns": 1770564,
+  "atomic_claim_mean_ns": 234.2,
+  "barrier_total_worker_elapsed_ns": 19970498,
+  "barrier_worker_visits": 2700,
+  "barrier_mean_worker_elapsed_ns": 7396.48,
+  "caveat": "Barrier includes arrival skew; worker times overlap; diagnostic instrumentation adds overhead. Do not add summed worker timing to wall time."
+}
