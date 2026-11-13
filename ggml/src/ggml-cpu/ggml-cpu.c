@@ -1536,8 +1536,6 @@ UseGgmlGemm2:;
         vcpu_micro_stats_register();
         atomic_fetch_add_explicit(&vcpu_micro_worker_visits, 1, memory_order_relaxed);
     }
-#else
-    const bool micro_stats = false;
 #endif
 
     // The number of elements in each chunk
